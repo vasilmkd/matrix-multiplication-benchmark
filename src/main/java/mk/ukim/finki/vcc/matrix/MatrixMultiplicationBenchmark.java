@@ -15,7 +15,7 @@ public class MatrixMultiplicationBenchmark {
 
     @State(Scope.Thread)
     public static class MatrixState {
-        @Param({ "10", "100", "1000", "10000" })
+        @Param({ "10", "100", "1000", "10000", "20000" })
         private int size;
 
         private long[][] firstMatrix;
