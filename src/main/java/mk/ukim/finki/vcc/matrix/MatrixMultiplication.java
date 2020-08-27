@@ -16,9 +16,8 @@ public class MatrixMultiplication {
 
         final CountDownLatch latch = new CountDownLatch(CPUS);
 
-        final long[][] transposedSecondMatrix = transpose(secondMatrix);
         final int rows = firstMatrix.length;
-        final int cols = transposedSecondMatrix.length;
+        final int cols = secondMatrix[0].length;
         final long[][] result = new long[rows][cols];
 
         final Pair<Integer, Integer> division = DivideCPUS.divideCPUS(CPUS);
@@ -33,8 +32,7 @@ public class MatrixMultiplication {
             for (int j = 0; j < division.getSecond(); j++) {
                 final int startCol = j * colStep;
                 final int endCol = (j + 1) * colStep;
-                executor.submit(execute(startRow, endRow, startCol, endCol, firstMatrix, transposedSecondMatrix, result,
-                        latch));
+                executor.submit(execute(startRow, endRow, startCol, endCol, firstMatrix, secondMatrix, result, latch));
             }
         }
 
@@ -51,45 +49,29 @@ public class MatrixMultiplication {
     private static final ExecutorService executor = Executors.newFixedThreadPool(CPUS);
 
     private static Runnable execute(final int startRow, final int endRow, final int startCol, final int endCol,
-            final long[][] firstMatrix, final long[][] transposedSecondMatrix, final long[][] result,
+            final long[][] firstMatrix, final long[][] secondMatrix, final long[][] result,
             final CountDownLatch latch) {
         return () -> {
             for (int row = startRow; row < endRow; row++) {
                 if (row >= firstMatrix.length)
                     continue;
                 for (int col = startCol; col < endCol; col++) {
-                    if (col >= transposedSecondMatrix.length)
+                    if (col >= secondMatrix[0].length)
                         continue;
-                    result[row][col] = dotProduct(firstMatrix[row], transposedSecondMatrix[col]);
+                    result[row][col] = dotProduct(firstMatrix, secondMatrix, row, col);
                 }
             }
             latch.countDown();
         };
     }
 
-    private static long[][] transpose(final long[][] matrix) {
-        assert matrix.length > 0;
-        assert matrix[0].length > 0;
-
-        final int rows = matrix.length;
-        final int cols = matrix[0].length;
-        final long[][] result = new long[cols][rows];
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                result[j][i] = matrix[i][j];
-            }
-        }
-
-        return result;
-    }
-
-    private static long dotProduct(final long[] row, final long[] col) {
-        assert row.length == col.length;
+    private static long dotProduct(final long[][] firstMatrix, final long[][] secondMatrix, final int row,
+            final int col) {
+        assert firstMatrix.length == secondMatrix[0].length;
 
         long result = 0;
-        for (int i = 0; i < row.length; i++) {
-            result += (row[i] * col[i]);
+        for (int i = 0; i < firstMatrix[0].length; i++) {
+            result += (firstMatrix[row][i] * secondMatrix[i][col]);
         }
 
         return result;
